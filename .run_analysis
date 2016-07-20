@@ -1,0 +1,88 @@
+
+library(downloader)
+
+# download the zip file and unzipping the compressde file
+
+url <-  "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+
+download(url, dest="getdata-projectfiles-UCI HAR Dataset.zip", mode="wb") 
+unzip("getdata-projectfiles-UCI HAR Dataset.zip")  
+
+dir()
+
+setwd("UCI HAR Dataset")   #change directory to "UCI HAR Dataset" which is created
+                           # # after unzipping
+
+dir()   # LIst of file created
+  
+# test data
+
+XTest <- read.table("test/X_test.txt")
+YTest <- read.table("test/y_test.txt")
+
+subject_test <- read.table("test/subject_test.txt")
+
+# train data
+
+X_train <- read.table("train/X_train.txt")
+YTrain <- read.table("train/y_train.txt")
+subject_train <- read.table("train/subject_train.txt")
+
+# features and activity
+
+features <- read.table("features.txt")
+activity_labels <- read.table("activity_labels.txt")
+
+# Part 1: Merges the training and the test sets to create one data set.
+
+x <- rbind(XTest, XTrain)
+y <- rbind(YTest, YTrain)
+subject <- rbind(subject_train,subject_test)
+                 
+# Part 2 : Extracts only the measurements on the mean and standard deviation for each measurement.
+
+# The grep, grepl, regexpr and gregexpr functions are used for searching for matches.
+# Let's seacrh the indices of the names that contain  mean() and -std().
+# \\ is escape character.
+
+mark <- grep("mean\\(\\)|std\\(\\)", features[,2])
+
+#variables with only mean and std
+
+x <- x[,mark]
+
+#give name to extracted from Feature.
+
+names(dices) <- features[mark,2]
+
+#gsub to remove  remove "()" and changing characters to lower case for clearity.
+names(dices) <- gsub("\\(|\\)", "",names(dices))
+names(dices) <- tolower(names(dices))
+
+
+
+#Part 3 - Uses descriptive activity names to name the activities in the data set.
+
+y[,1] <- activity_labels[y[,1],2]
+
+# Part 4 - Appropriately labels the data set with descriptive variable names.
+
+## getting names for variables
+names <- features[mark,2]
+
+# updating col name for new dataset
+names(x) <- names
+names(subject) <- "subject"
+names(y) <- "activity"
+
+clean <- cbind(subject,x,y)
+head(clean)
+
+# Part 5 - From the data set in step 4, creates a second, independent 
+#tidy data set with the average of each variable 
+#for each activity and each subject.
+
+
+# Use aggregate to split data into subsets, computes summary statistics for each.
+clean2 <- aggregate(. ~subject + activity, clean, mean)
+write.table(clean2, file = "merged_and_cleaned_data_average_activity.txt",row.name=FALSE)
